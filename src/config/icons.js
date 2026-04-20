@@ -1,0 +1,41 @@
+import { 
+  Home, 
+  LayoutGrid,
+  Users, 
+  Settings, 
+  LogOut, 
+  Menu, 
+  X, 
+  Plus, 
+  Edit, 
+  Trash2, 
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  MoreVertical,
+  Loader2,
+  Mail,
+  Lock,
+  AlertCircle
+} from "lucide-react";
+
+export const Icons = {
+  home: Home,
+  dashboard: LayoutGrid,
+  users: Users,
+  settings: Settings,
+  logout: LogOut,
+  menu: Menu,
+  close: X,
+  add: Plus,
+  edit: Edit,
+  delete: Trash2,
+  search: Search,
+  chevronLeft: ChevronLeft,
+  chevronRight: ChevronRight,
+  moreVertical: MoreVertical,
+  spinner: Loader2,
+  mail: Mail,
+  lock: Lock,
+  warning: AlertCircle
+};
