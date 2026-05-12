@@ -5,68 +5,168 @@
 
 @layer base {
   :root {
-    --background: #0a0f1a;
-    --surface: #111827;
-    --card: #141d2e;
-    --accent: #10b981;
-    --secondary: #f59e0b;
-    --purple: #6366f1;
-    --foreground: #ffffff;
+    /* Core palette */
+    --bg:           #0a0f1a;
+    --surface:      #111827;
+    --card:         #141d2e;
+    --sidebar-bg:   #0d1424;
+    --sidebar-w:    260px;
+
+    /* Accents */
+    --accent:       #10b981;
+    --accent-dim:   rgba(16,185,129,0.12);
+    --accent-glow:  rgba(16,185,129,0.35);
+    --amber:        #f59e0b;
+    --amber-dim:    rgba(245,158,11,0.12);
+    --purple:       #6366f1;
+    --purple-dim:   rgba(99,102,241,0.12);
+    --red:          #ef4444;
+    --red-dim:      rgba(239,68,68,0.12);
+    --blue:         #3b82f6;
+    --blue-dim:     rgba(59,130,246,0.12);
+
+    /* Text */
+    --fg:           #ffffff;
+    --fg-muted:     rgba(255,255,255,0.55);
+    --fg-faint:     rgba(255,255,255,0.28);
+
+    /* Borders */
+    --border:       rgba(255,255,255,0.07);
+    --border-hover: rgba(255,255,255,0.14);
+    --border-accent: rgba(16,185,129,0.30);
+
+    /* Radius */
+    --radius-sm:   8px;
+    --radius-md:   14px;
+    --radius-lg:   20px;
+    --radius-xl:   28px;
+    --radius-2xl:  36px;
+  }
+
+  * {
+    box-sizing: border-box;
   }
 
   body {
-    background-color: var(--background);
-    color: var(--foreground);
+    background-color: var(--bg);
+    color: var(--fg);
     position: relative;
     min-height: 100vh;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
   }
 
-  /* Grid pattern overlay */
+  /* Subtle grid overlay on the whole page */
   body::before {
     content: '';
-    position: absolute;
+    position: fixed;
     inset: 0;
     pointer-events: none;
-    background-image: 
-      linear-gradient(to right, rgba(255,255,255,1) 1px, transparent 1px),
+    background-image:
+      linear-gradient(to right,  rgba(255,255,255,1) 1px, transparent 1px),
       linear-gradient(to bottom, rgba(255,255,255,1) 1px, transparent 1px);
     background-size: 40px 40px;
-    opacity: 0.03;
-    z-index: -1;
+    opacity: 0.025;
+    z-index: 0;
   }
 }
 
-.modal-open {
-  overflow: hidden;
-}
+/* ──────────────────────────────────────────
+   Modal
+─────────────────────────────────────────── */
+.modal-open { overflow: hidden; }
 
-/* Custom Scrollbar for sleekness */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-track {
-  background: var(--surface);
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
+/* ──────────────────────────────────────────
+   Scrollbar
+─────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.10); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* Waveform animation for the audio player */
+/* ──────────────────────────────────────────
+   Audio waveform
+─────────────────────────────────────────── */
 @keyframes wave {
-  0% { transform: scaleY(0.4); }
-  50% { transform: scaleY(1); }
+  0%   { transform: scaleY(0.4); }
+  50%  { transform: scaleY(1); }
   100% { transform: scaleY(0.4); }
 }
-
-.playing .waveform-bar {
-  animation: wave 1s ease-in-out infinite;
-  transform-origin: bottom;
-}
+.playing .waveform-bar { animation: wave 1s ease-in-out infinite; transform-origin: bottom; }
 .playing .waveform-bar:nth-child(2) { animation-delay: 0.1s; }
 .playing .waveform-bar:nth-child(3) { animation-delay: 0.2s; }
 .playing .waveform-bar:nth-child(4) { animation-delay: 0.3s; }
+
+/* ──────────────────────────────────────────
+   Float animation (hero card)
+─────────────────────────────────────────── */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-12px); }
+}
+.animate-float { animation: float 4s ease-in-out infinite; }
+
+/* ──────────────────────────────────────────
+   Fade-in-up
+─────────────────────────────────────────── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up { animation: fadeInUp 0.35s ease both; }
+
+/* ──────────────────────────────────────────
+   Gradient shimmer (skeleton loader)
+─────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--card) 25%, rgba(255,255,255,0.04) 50%, var(--card) 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ──────────────────────────────────────────
+   Dashboard sidebar layout
+─────────────────────────────────────────── */
+.dashboard-layout {
+  display: flex;
+  min-height: 100vh;
+}
+.dashboard-sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  z-index: 30;
+}
+.dashboard-main {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 768px) {
+  .dashboard-sidebar { transform: translateX(-100%); transition: transform 0.3s ease; }
+  .dashboard-sidebar.open { transform: translateX(0); }
+  .dashboard-main { margin-left: 0; }
+}
+
+/* ──────────────────────────────────────────
+   Glow helpers
+─────────────────────────────────────────── */
+.glow-accent { box-shadow: 0 0 20px var(--accent-glow); }
+.glow-accent-lg { box-shadow: 0 0 40px var(--accent-glow); }
+
+/* ──────────────────────────────────────────
+   Arabic font utility
+─────────────────────────────────────────── */
+.font-arabic { font-family: var(--font-arabic), 'Noto Naskh Arabic', serif; }
