@@ -1,130 +1,231 @@
 'use client';
-import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/store/authStore';
+import { profileQueries, progressQueries, homeworkQueries } from '@/lib/queries';
+import { letters } from '@/data/letters';
+import { useT, useLang } from '@/i18n';
+import Icon from '@/components/dash/Icon';
 
-const MOCK_STATS = [
-  { label: 'Jami Sinflar', value: '3', icon: '🏫', color: '#10b981', change: '+1 bu oy' },
-  { label: 'Jami Talabalar', value: '24', icon: '🎓', color: '#6366f1', change: '+5 bu hafta' },
-  { label: 'Darslar', value: '18', icon: '📚', color: '#f59e0b', change: '6 ta yangi' },
-  { label: 'O\'rt. Ball', value: '82%', icon: '📊', color: '#3b82f6', change: '+4% o\'sish' },
-];
+const TOTAL = 28;
 
-const MOCK_CLASSES = [
-  { id: 1, name: "Arabic 101 — Boshlang'ich", students: 10, lessons: 7, progress: 68 },
-  { id: 2, name: "Arabic 201 — O'rta", students: 8, lessons: 5, progress: 42 },
-  { id: 3, name: "Tajvid Kursi", students: 6, lessons: 6, progress: 55 },
-];
-
-const MOCK_ACTIVITY = [
-  { text: "Asilbek 'Alif' darsini tugatdi", time: "5 daqiqa oldin", icon: '✅' },
-  { text: "Nilufar uy ishini topshirdi", time: "23 daqiqa oldin", icon: '📝' },
-  { text: "Jamshid 'Baa' testida 100% oldi", time: "1 soat oldin", icon: '🏆' },
-  { text: "Sardor platformaga kirdi", time: "2 soat oldin", icon: '👋' },
-  { text: "Yangi dars qo'shildi: 'Taa harfi'", time: "kecha", icon: '📚' },
-];
+function fmtSpent(sec = 0, lang) {
+  const m = Math.floor(sec / 60), s = sec % 60;
+  return lang === 'uz' ? `${m}d ${s}s` : `${m}m ${s}s`;
+}
 
 export default function TeacherDashboard() {
+  const t = useT();
+  const lang = useLang((s) => s.lang);
+  const router = useRouter();
+  const { profile } = useAuthStore();
+  const [rows, setRows] = useState([]);       // [{ student, currentId, doneCount }]
+  const [homework, setHomework] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!profile?.id) return;
+    let alive = true;
+    (async () => {
+      try {
+        const [students, hw] = await Promise.all([
+          profileQueries.listStudents(profile.id),
+          homeworkQueries.getTeacherHomework(profile.id),
+        ]);
+        const withProgress = await Promise.all(students.map(async (s) => {
+          const map = await progressQueries.getProgressMap(s.id);
+          const currentId = Number(Object.entries(map).find(([, st]) => st === 'current')?.[0]) || null;
+          const doneCount = Object.values(map).filter((st) => st === 'done').length;
+          return { student: s, currentId, doneCount };
+        }));
+        if (!alive) return;
+        setRows(withProgress); setHomework(hw);
+      } finally { if (alive) setLoading(false); }
+    })();
+    return () => { alive = false; };
+  }, [profile?.id]);
+
+  const subs = homework.flatMap((h) => (h.homework_submissions ?? []).map((s) => ({ ...s, hw: h })));
+  const pending = subs.filter((s) => s.status === 'submitted');
+  const graded = subs.filter((s) => s.status === 'graded');
+  const gradeNums = graded.map((s) => Number(s.teacher_grade)).filter((n) => !Number.isNaN(n));
+  const avgGrade = gradeNums.length ? (gradeNums.reduce((a, b) => a + b, 0) / gradeNums.length).toFixed(1) : '—';
+
+  const activeStudents = rows.filter((r) => r.student.is_active !== false).length;
+  const lead = rows.slice().sort((a, b) => b.doneCount - a.doneCount)[0];
+  const masteryDone = lead?.doneCount ?? 0;
+  const masteryCurrentIdx = lead?.currentId ? lead.currentId - 1 : -1;
+  const masteryPct = Math.round((masteryDone / TOTAL) * 100);
+
+  // recent activity derived from submissions (honest)
+  const activity = subs
+    .filter((s) => s.submitted_at || s.graded_at)
+    .map((s) => {
+      const name = s.hw.student?.full_name ?? s.hw.student?.email ?? '—';
+      const when = s.graded_at || s.submitted_at;
+      if (s.status === 'graded') {
+        return { icon: 'star', tone: 'ok', name, suffix: `${t('activity_graded')}${s.teacher_grade ? ' · ' + s.teacher_grade : ''}`, when };
+      }
+      return { icon: 'fileCheck', tone: 'ok', name, suffix: t('activity_submitted'), when };
+    })
+    .sort((a, b) => new Date(b.when) - new Date(a.when))
+    .slice(0, 6);
+
+  const relTime = (iso) => {
+    if (!iso) return '';
+    const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+    const h = Math.floor(diff / 3600), d = Math.floor(diff / 86400);
+    if (d >= 1) return lang === 'uz' ? `${d} kun oldin` : `${d}d ago`;
+    if (h >= 1) return lang === 'uz' ? `${h} soat oldin` : `${h}h ago`;
+    return lang === 'uz' ? 'Hozir' : 'Just now';
+  };
+
+  if (loading) return <div className="dash-spin" />;
+
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
+    <div className="view">
+      <div className="page-head">
         <div>
-          <h1 className="text-3xl font-extrabold text-white">Dashboard</h1>
-          <p className="text-white/50 mt-1">Xush kelibsiz! Bugungi holat:</p>
+          <h1 className="page-title">{t('nav_dashboard')}</h1>
+          <p className="page-sub">{t('dash_welcome')}</p>
         </div>
-        <Link
-          href="/dashboard/classes"
-          className="flex items-center gap-2 bg-[#10b981] hover:bg-[#059669] text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] transition-all"
-        >
-          + Yangi Sinf
-        </Link>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {MOCK_STATS.map((s, i) => (
-          <div key={i} className="bg-[#141d2e] border border-white/6 rounded-2xl p-5 hover:border-white/12 transition-all">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: `${s.color}15`, border: `1px solid ${s.color}25` }}>
-                {s.icon}
-              </div>
-              <span className="text-xs font-medium text-white/35">{s.change}</span>
+      {/* KPI strip */}
+      <div className="kpis">
+        <Kpi icon="students" tone="brand" num={rows.length} label={t('kpi_students')} delta={rows.length ? `${rows.length} ${t('chip_total')}` : t('delta_flat')} up={rows.length > 0} />
+        <Kpi icon="user" tone="blue" num={activeStudents} label={t('kpi_active')} flat={t('delta_flat')} />
+        <Kpi icon="hourglass" tone="amber" num={pending.length} label={t('kpi_pending')} delta={`${pending.length} ${t('delta_queue')}`} />
+        <Kpi icon="star" tone="brand" num={avgGrade} label={t('kpi_avg')} delta={graded.length ? `${graded.length}` : t('delta_flat')} up={graded.length > 0} />
+        <Kpi icon="target" tone="brand" num={masteryPct} suffix="%" label={t('kpi_mastery')} delta={`${masteryDone}/${TOTAL}`} up={masteryDone > 0} />
+      </div>
+
+      <div className="grid-2">
+        {/* alphabet mastery */}
+        <div className="card">
+          <div className="card-head">
+            <div className="card-title"><span className="ct-ico"><Icon name="chart" size={18} /></span>{t('mastery_title')}</div>
+            <button className="link-all" onClick={() => router.push('/dashboard/lessons')}>{t('view_all')}<Icon name="arrowR" size={14} /></button>
+          </div>
+          <div className="mastery-body">
+            <div className="mastery-bar-row">
+              <div className="mastery-pct">{masteryPct}%</div>
+              <div className="mbar"><i style={{ width: masteryPct + '%' }} /></div>
+              <div className="mastery-meta">{masteryDone} / {TOTAL} {t('mastery_meta_uz')}</div>
             </div>
-            <div className="text-3xl font-extrabold text-white">{s.value}</div>
-            <div className="text-sm text-white/50 mt-1">{s.label}</div>
+            <div className="alpha-grid">
+              {letters.map((l, i) => {
+                const cls = i < masteryDone ? 'done' : i === masteryCurrentIdx ? 'current' : 'locked';
+                return <div className={'alpha-cell ' + cls} key={l.id} title={l.name}>{l.ar}</div>;
+              })}
+            </div>
+            <div className="alpha-legend">
+              <span><i className="lg-dot" style={{ background: 'var(--brand)' }} />{t('lg_done')}</span>
+              <span><i className="lg-dot" style={{ background: 'var(--amber)' }} />{t('lg_current')}</span>
+              <span><i className="lg-dot" style={{ background: 'var(--cream-3)' }} />{t('lg_locked')}</span>
+            </div>
           </div>
-        ))}
-      </div>
+        </div>
 
-      {/* Main grid */}
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Classes */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-white">Sinflarim</h2>
-            <Link href="/dashboard/classes" className="text-sm text-[#10b981] hover:underline font-medium">Barchasi →</Link>
+        {/* grading queue */}
+        <div className="card">
+          <div className="card-head">
+            <div className="card-title"><span className="ct-ico"><Icon name="inbox" size={18} /></span>{t('queue_title')}</div>
+            {pending.length > 0 && <span className="badge warn">{pending.length}</span>}
           </div>
-          <div className="space-y-3">
-            {MOCK_CLASSES.map(cls => (
-              <Link
-                key={cls.id}
-                href={`/dashboard/classes/${cls.id}`}
-                className="block bg-[#141d2e] border border-white/6 rounded-2xl p-5 hover:border-[#10b981]/25 hover:-translate-y-0.5 transition-all group"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <div className="font-bold text-white group-hover:text-[#10b981] transition-colors">{cls.name}</div>
-                    <div className="text-sm text-white/45 mt-0.5">{cls.students} talaba · {cls.lessons} dars</div>
+          {pending.length === 0 ? (
+            <div className="empty">
+              <div className="ei"><Icon name="checkCircle" size={26} /></div>
+              <h4>{t('queue_empty_h')}</h4>
+              <p>{t('queue_empty_p')}</p>
+            </div>
+          ) : (
+            <div className="rows">
+              {pending.slice(0, 5).map((s) => {
+                const letter = letters.find((l) => l.id === s.hw.letter_id);
+                return (
+                  <div className="lrow" key={s.id} onClick={() => router.push('/dashboard/homework?new=0')} style={{ cursor: 'pointer' }}>
+                    <div className="tile ar">{letter?.ar ?? '؟'}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="lrow-title">{s.hw.title}</div>
+                      <div className="lrow-meta">{s.hw.student?.full_name ?? ''}<span className="sep" /><Icon name="clock" size={12} />{fmtSpent(s.time_spent_seconds, lang)}</div>
+                    </div>
+                    <span className="badge warn">{t('hw_pending_badge')}</span>
                   </div>
-                  <span className="text-lg font-extrabold text-[#10b981]">{cls.progress}%</span>
-                </div>
-                <div className="h-1.5 bg-white/6 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-[#10b981] to-[#34d399] rounded-full transition-all duration-700"
-                    style={{ width: `${cls.progress}%` }}
-                  />
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* Activity feed */}
-        <div>
-          <h2 className="text-lg font-bold text-white mb-4">Faollik</h2>
-          <div className="bg-[#141d2e] border border-white/6 rounded-2xl p-4 space-y-3">
-            {MOCK_ACTIVITY.map((a, i) => (
-              <div key={i} className="flex items-start gap-3 py-2 border-b border-white/5 last:border-0">
-                <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-base flex-shrink-0">{a.icon}</div>
-                <div>
-                  <p className="text-sm text-white/80 leading-snug">{a.text}</p>
-                  <p className="text-xs text-white/35 mt-0.5">{a.time}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Quick links */}
-      <div className="grid sm:grid-cols-3 gap-4">
-        {[
-          { href: '/dashboard/lessons/new', icon: '📚', label: 'Yangi Dars', desc: 'Yangi dars yarating', color: '#f59e0b' },
-          { href: '/dashboard/homework', icon: '📝', label: 'Uy Ishi Berish', desc: 'Topshiriq yarating', color: '#6366f1' },
-          { href: '/dashboard/progress', icon: '📊', label: 'Hisobotlar', desc: "Progress ko'rish", color: '#3b82f6' },
-        ].map(q => (
-          <Link key={q.href} href={q.href}
-            className="bg-[#141d2e] border border-white/6 rounded-2xl p-5 hover:border-white/12 hover:-translate-y-0.5 transition-all group flex items-center gap-4"
-          >
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0" style={{ background: `${q.color}15`, border: `1px solid ${q.color}25` }}>
-              {q.icon}
+      <div className="grid-2 mt">
+        {/* recent graded */}
+        <div className="card">
+          <div className="card-head">
+            <div className="card-title"><span className="ct-ico"><Icon name="fileCheck" size={18} /></span>{t('recent_title')}</div>
+            <button className="link-all" onClick={() => router.push('/dashboard/homework')}>{t('view_all')}<Icon name="arrowR" size={14} /></button>
+          </div>
+          {graded.length === 0 ? (
+            <div className="empty"><div className="ei"><Icon name="fileCheck" size={26} /></div><p>{t('hw_none')}</p></div>
+          ) : (
+            <div className="rows">
+              {graded.slice(0, 5).map((s) => {
+                const letter = letters.find((l) => l.id === s.hw.letter_id);
+                return (
+                  <div className="lrow" key={s.id}>
+                    <div className="tile ar">{letter?.ar ?? '؟'}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="lrow-title">{s.hw.title}</div>
+                      <div className="lrow-meta">{s.hw.student?.full_name ?? ''}<span className="sep" /><Icon name="clock" size={12} />{fmtSpent(s.time_spent_seconds, lang)}{s.teacher_grade != null && s.teacher_grade !== '' && <><span className="sep" /><b>{t('dash_grade')}: {s.teacher_grade}</b></>}</div>
+                    </div>
+                    <span className="badge ok"><Icon name="check" size={12} />{t('hw_graded_badge')}</span>
+                  </div>
+                );
+              })}
             </div>
-            <div>
-              <div className="font-bold text-white group-hover:text-white/90">{q.label}</div>
-              <div className="text-xs text-white/45">{q.desc}</div>
+          )}
+        </div>
+
+        {/* activity feed */}
+        <div className="card">
+          <div className="card-head"><div className="card-title"><span className="ct-ico"><Icon name="clock" size={18} /></span>{t('activity_title')}</div></div>
+          {activity.length === 0 ? (
+            <div className="empty"><div className="ei"><Icon name="clock" size={26} /></div><p>{t('queue_empty_p')}</p></div>
+          ) : (
+            <div className="feed">
+              {activity.map((a, i) => (
+                <div className="fitem" key={i}>
+                  <div className={'fdot ' + a.tone}><Icon name={a.icon} size={15} /></div>
+                  <div>
+                    <div className="ftext"><b>{a.name}</b> {a.suffix}</div>
+                    <div className="ftime">{relTime(a.when)}</div>
+                  </div>
+                </div>
+              ))}
             </div>
-          </Link>
-        ))}
+          )}
+        </div>
       </div>
+    </div>
+  );
+}
+
+function Kpi({ icon, tone, num, suffix, label, delta, up, flat }) {
+  const tones = {
+    brand: { bg: 'var(--brand-50)', fg: 'var(--brand)' },
+    amber: { bg: 'var(--amber-soft)', fg: 'var(--amber)' },
+    blue: { bg: 'var(--blue-soft)', fg: 'var(--blue)' },
+  }[tone] || {};
+  return (
+    <div className="kpi">
+      <div className="kpi-top">
+        <div className="kpi-ico" style={{ background: tones.bg, color: tones.fg }}><Icon name={icon} size={18} /></div>
+        {delta && <span className={'kpi-delta ' + (up ? 'up' : 'flat')}>{up && <Icon name="arrowUp" size={11} />}{delta}</span>}
+        {!delta && flat && <span className="kpi-delta flat">{flat}</span>}
+      </div>
+      <div className="kpi-num">{num}{suffix && <small>{suffix}</small>}</div>
+      <div className="kpi-label">{label}</div>
     </div>
   );
 }

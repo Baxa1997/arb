@@ -1,7 +1,8 @@
 export const siteConfig = {
-  name: "Lucid Template",
-  description: "A modern, production-ready website template built with Next.js and Tailwind CSS.",
+  name: "Arabic Education Center",
+  description: "Arab tilini zamonaviy usulda o'rganish platformasi — o'qituvchilar, talabalar va to'liq dars kuzatuvi.",
   url: "https://example.com",
-  logoText: "LUCID",
+  logoText: "Arabic Education Center",
+  logoArabic: "اقرأ",
   ogImage: "/og-image.png",
 };

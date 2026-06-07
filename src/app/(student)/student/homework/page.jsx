@@ -1,84 +1,86 @@
 'use client';
-import { useState } from 'react';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { useAuthStore } from '@/store/authStore';
+import { homeworkQueries } from '@/lib/queries';
+import { letters } from '@/data/letters';
+import { useT, useLang } from '@/i18n';
+import Icon from '@/components/dash/Icon';
 
-const MOCK_HW = [
-  { id: 1, title: 'Alifbo takroriy yozuv', class: "Arabic 101", due: '2026-05-14', status: 'pending', desc: 'Har bir harfni kamida 3 marta yozing.' },
-  { id: 2, title: 'Harakatlar mashqi', class: "Arabic 201", due: '2026-05-12', status: 'submitted', grade: 90, feedback: "Juda yaxshi! Faqat Kasra qismida e'tiborli bo'ling." },
-  { id: 3, title: 'Qalqala harflari', class: 'Tajvid Kursi', due: '2026-05-18', status: 'graded', grade: 85, feedback: 'Yaxshi ish!' },
-];
-
-const STATUS = {
-  pending:   { label: 'Kutilmoqda', color: '#f59e0b' },
-  submitted: { label: 'Topshirildi', color: '#6366f1' },
-  graded:    { label: 'Baholandi', color: '#10b981' },
-};
+function fmtTime(sec = 0, lang) {
+  const m = Math.floor(sec / 60), s = sec % 60;
+  return lang === 'uz' ? `${m}d ${s}s` : `${m}m ${s}s`;
+}
 
 export default function StudentHomeworkPage() {
-  const [activeId, setActiveId] = useState(null);
-  const [text, setText] = useState('');
+  const t = useT();
+  const lang = useLang((s) => s.lang);
+  const { profile } = useAuthStore();
+  const [homework, setHomework] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState('todo');
+
+  useEffect(() => {
+    if (!profile?.id) return;
+    homeworkQueries.getStudentHomework(profile.id).then(setHomework).catch(() => {}).finally(() => setLoading(false));
+  }, [profile?.id]);
+
+  const statusOf = (h) => (h.homework_submissions ?? [])[0]?.status ?? 'not_started';
+  const todo = homework.filter((h) => ['not_started', 'in_progress'].includes(statusOf(h)));
+  const submitted = homework.filter((h) => statusOf(h) === 'submitted');
+  const graded = homework.filter((h) => statusOf(h) === 'graded');
+  const items = tab === 'todo' ? todo : tab === 'submitted' ? submitted : graded;
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-extrabold text-white">Uy Ishi</h1>
-        <p className="text-white/50 mt-1">Tayinlangan topshiriqlar</p>
+    <div className="view">
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">{t('hw_title')}</h1>
+          <p className="page-sub">{t('hw_student_sub')}</p>
+        </div>
       </div>
 
-      <div className="space-y-4">
-        {MOCK_HW.map(hw => {
-          const s = STATUS[hw.status];
-          return (
-            <div key={hw.id} className="bg-[#141d2e] border border-white/6 rounded-2xl overflow-hidden">
-              <div className="p-5">
-                <div className="flex items-start justify-between gap-4 flex-wrap">
-                  <div>
-                    <h3 className="font-bold text-white text-lg">{hw.title}</h3>
-                    <p className="text-sm text-white/45 mt-0.5">{hw.class} · Muddat: {hw.due}</p>
-                    {hw.desc && <p className="text-sm text-white/60 mt-2">{hw.desc}</p>}
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    {hw.grade && (
-                      <span className="text-xl font-extrabold text-[#10b981]">{hw.grade}%</span>
-                    )}
-                    <span className="text-xs font-bold px-2.5 py-1 rounded-full border" style={{ background: `${s.color}15`, borderColor: `${s.color}25`, color: s.color }}>
-                      {s.label}
-                    </span>
-                  </div>
-                </div>
-
-                {hw.feedback && (
-                  <div className="mt-3 p-3 rounded-xl bg-[#10b981]/8 border border-[#10b981]/15">
-                    <p className="text-xs font-bold text-[#10b981] mb-1">O'qituvchi izohi:</p>
-                    <p className="text-sm text-white/70">{hw.feedback}</p>
-                  </div>
-                )}
-
-                {hw.status === 'pending' && (
-                  <button onClick={() => setActiveId(activeId === hw.id ? null : hw.id)}
-                    className="mt-4 px-4 py-2 rounded-xl bg-[#6366f1]/15 text-[#6366f1] border border-[#6366f1]/25 text-sm font-bold hover:bg-[#6366f1]/25 transition-all">
-                    {activeId === hw.id ? '▲ Yopish' : '▼ Topshirish'}
-                  </button>
-                )}
-              </div>
-
-              {activeId === hw.id && (
-                <div className="px-5 pb-5 border-t border-white/5 pt-4">
-                  <textarea value={text} onChange={e => setText(e.target.value)}
-                    placeholder="Javobingizni yozing..."
-                    className="w-full h-28 bg-[#111827] border border-white/8 text-white placeholder-white/25 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#6366f1]/40 transition-all resize-none" />
-                  <div className="flex gap-2 mt-3">
-                    <button onClick={() => setActiveId(null)} className="px-4 py-2 rounded-xl bg-white/6 text-white text-sm font-bold hover:bg-white/10 transition-all">Bekor</button>
-                    <button onClick={() => { alert('Topshirildi!'); setActiveId(null); setText(''); }}
-                      className="px-4 py-2 rounded-xl bg-[#6366f1] text-white text-sm font-bold hover:bg-[#5558e8] shadow-[0_0_15px_rgba(99,102,241,0.3)] transition-all">
-                      Topshirish
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
+      <div className="tbl-toolbar">
+        <div className="seg">
+          <button className={tab === 'todo' ? 'on' : ''} onClick={() => setTab('todo')}>{t('sec_todo')}<span className="sc">{todo.length}</span></button>
+          <button className={tab === 'submitted' ? 'on' : ''} onClick={() => setTab('submitted')}>{t('sec_submitted')}<span className="sc">{submitted.length}</span></button>
+          <button className={tab === 'graded' ? 'on' : ''} onClick={() => setTab('graded')}>{t('sec_graded')}<span className="sc">{graded.length}</span></button>
+        </div>
       </div>
+
+      {loading ? (
+        <div className="dash-spin" />
+      ) : items.length === 0 ? (
+        <div className="card"><div className="empty"><div className="ei"><Icon name="fileCheck" size={26} /></div><h4>{t('hw_none')}</h4><p>{t('no_homework_short')}</p></div></div>
+      ) : (
+        <div className="card rows">
+          {items.map((hw) => {
+            const s = (hw.homework_submissions ?? [])[0];
+            const status = s?.status ?? 'not_started';
+            const letter = letters.find((l) => l.id === hw.letter_id);
+            const badge = {
+              not_started: ['neutral', t('st_not_started')],
+              in_progress: ['warn', t('st_in_progress')],
+              submitted: ['ok', t('st_submitted')],
+              graded: ['ok', `${t('hw_grade')}: ${s?.teacher_grade ?? '✓'}`],
+            }[status];
+            return (
+              <Link className="lrow" key={hw.id} href={`/student/homework/${hw.id}`} style={{ color: 'inherit', textDecoration: 'none', cursor: 'pointer' }}>
+                {letter && <div className="tile ar">{letter.ar}</div>}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="lrow-title">{hw.title}</div>
+                  <div className="lrow-meta">
+                    {hw.due_date ? `${t('due_label')}: ${hw.due_date}` : t('no_due')}
+                    {(status === 'submitted' || status === 'graded') && <><span className="sep" /><Icon name="clock" size={12} />{fmtTime(s?.time_spent_seconds, lang)}</>}
+                  </div>
+                </div>
+                <span className={'badge ' + badge[0]}>{badge[1]}</span>
+                <span style={{ color: 'var(--ink-faint)' }}><Icon name="chevR" size={16} /></span>
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

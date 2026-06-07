@@ -1,132 +1,194 @@
 'use client';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useLang } from '@/i18n';
+
+/* ---------------- content ---------------- */
+const COPY = {
+  uz: {
+    eyebrow: 'Arabic Education Center',
+    title: 'Arab tilini zamonaviy o‘rganing',
+    sub: 'Har bir harf alohida dars. Uy ishlaringizni topshiring, o‘qituvchingiz rivojlanishingizni kuzatadi.',
+    points: ['28 ta harf — ketma-ket ochiladigan darslar', 'Avtomatik tekshiriladigan uy ishlari', 'O‘qituvchi bilan jonli rivojlanish'],
+    welcome: 'Xush kelibsiz',
+    welcomeSub: 'Hisobingizga kiring',
+    email: 'Email',
+    emailPh: 'email@example.com',
+    pass: 'Parol',
+    remember: 'Eslab qolish',
+    forgot: 'Parolni unutdingizmi?',
+    submit: 'Kirish',
+    submitting: 'Tekshirilmoqda…',
+    foot: 'Hisob o‘qituvchi yoki markaz tomonidan beriladi.',
+    back: 'Bosh sahifaga qaytish',
+    errEmail: 'To‘g‘ri email kiriting',
+    errPass: 'Parolni kiriting',
+  },
+  en: {
+    eyebrow: 'Arabic Education Center',
+    title: 'Learn Arabic the modern way',
+    sub: 'Every letter is its own lesson. Submit your homework and let your teacher track your progress.',
+    points: ['28 letters — lessons unlocked step by step', 'Auto-graded homework', 'Live progress with your teacher'],
+    welcome: 'Welcome back',
+    welcomeSub: 'Sign in to your account',
+    email: 'Email',
+    emailPh: 'email@example.com',
+    pass: 'Password',
+    remember: 'Remember me',
+    forgot: 'Forgot password?',
+    submit: 'Sign in',
+    submitting: 'Checking…',
+    foot: 'Accounts are issued by your teacher or center.',
+    back: 'Back to home',
+    errEmail: 'Enter a valid email',
+    errPass: 'Enter your password',
+  },
+};
+
+const WM_LETTERS = ['ج', 'ب', 'س', 'ع', 'م', 'ت'];
+const POINT_ICONS = ['layers', 'check', 'pulse'];
+
+function Icon({ name, size = 18 }) {
+  const p = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.9, strokeLinecap: 'round', strokeLinejoin: 'round' };
+  const paths = {
+    eye: <><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></>,
+    eyeoff: <><path d="M9.9 5.1A9.8 9.8 0 0112 5c6.5 0 10 7 10 7a17 17 0 01-3 3.8M6.1 6.1A17 17 0 002 12s3.5 7 10 7a9.8 9.8 0 004.1-.9" /><path d="M3 3l18 18" /></>,
+    check: <path d="M20 6L9 17l-5-5" />,
+    arrowleft: <path d="M19 12H5M11 6l-6 6 6 6" />,
+    info: <><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 7.5v.5" /></>,
+    layers: <path d="M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5" />,
+    pulse: <path d="M3 12h4l2-6 4 14 2-8h6" />,
+    warn: <><path d="M12 9v4M12 17h.01" /><path d="M10.3 4.3 2.6 18a1.8 1.8 0 001.6 2.7h15.6A1.8 1.8 0 0021.4 18L13.7 4.3a1.8 1.8 0 00-3.4 0z" /></>,
+  };
+  return <svg {...p}>{paths[name]}</svg>;
+}
 
 export default function LoginPage() {
+  const lang = useLang((s) => s.lang);
+  const setLang = useLang((s) => s.setLang);
+  const { signIn, loading, error } = useAuth();
+
+  const [mounted, setMounted] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
-  const { signIn, loading, error } = useAuth();
+  const [remember, setRemember] = useState(true);
+  const [errors, setErrors] = useState({});
+  const [wmIdx, setWmIdx] = useState(0);
 
-  const handleSubmit = async (e) => {
+  const c = COPY[lang] || COPY.uz;
+
+  useEffect(() => { const r = setTimeout(() => setMounted(true), 60); return () => clearTimeout(r); }, []);
+  useEffect(() => {
+    const id = setInterval(() => setWmIdx((i) => (i + 1) % WM_LETTERS.length), 4200);
+    return () => clearInterval(id);
+  }, []);
+
+  const submit = async (e) => {
     e.preventDefault();
+    const er = {};
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) er.email = c.errEmail;
+    if (!password) er.pass = c.errPass;
+    setErrors(er);
+    if (Object.keys(er).length) return;
     await signIn(email, password);
   };
 
-  const fillDemo = (role) => {
-    setEmail(role === 'teacher' ? 'teacher@demo.com' : 'student@demo.com');
-    setPassword('demo1234');
-  };
-
   return (
-    <div className="relative z-10 w-full max-w-md">
-      {/* Card */}
-      <div className="bg-[#111827] border border-white/8 rounded-3xl p-8 shadow-[0_30px_60px_rgba(0,0,0,0.5)]">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <span className="font-arabic text-5xl text-[#10b981] drop-shadow-[0_0_20px_rgba(16,185,129,0.5)]">اقرأ</span>
-          <h1 className="text-2xl font-extrabold text-white mt-3">Xush kelibsiz</h1>
-          <p className="text-white/50 text-sm mt-1">Hisobingizga kiring</p>
+    <div className={'aec-login' + (mounted ? '' : ' preload')}>
+      {/* LEFT — brand panel */}
+      <aside className="brandside enter">
+        <div className="watermark wm-fade ar" key={wmIdx}>{WM_LETTERS[wmIdx]}</div>
+
+        <div className="b-logo">
+          <div className="b-mark ar">اقرأ</div>
+          <div className="b-logo-name">Arabic Education Center</div>
         </div>
 
-        {/* Demo shortcuts */}
-        <div className="grid grid-cols-2 gap-2 mb-6">
-          <button
-            type="button"
-            onClick={() => fillDemo('teacher')}
-            className="flex items-center justify-center gap-2 py-2 px-3 rounded-xl border border-[#10b981]/20 bg-[#10b981]/8 text-[#10b981] text-xs font-bold hover:bg-[#10b981]/15 transition-all"
-          >
-            🏫 O'qituvchi demo
-          </button>
-          <button
-            type="button"
-            onClick={() => fillDemo('student')}
-            className="flex items-center justify-center gap-2 py-2 px-3 rounded-xl border border-[#6366f1]/20 bg-[#6366f1]/8 text-[#6366f1] text-xs font-bold hover:bg-[#6366f1]/15 transition-all"
-          >
-            🎓 Talaba demo
-          </button>
-        </div>
-
-        <div className="flex items-center gap-3 mb-6">
-          <div className="flex-1 h-px bg-white/8" />
-          <span className="text-xs text-white/30 font-medium">yoki qo'lda kiriting</span>
-          <div className="flex-1 h-px bg-white/8" />
-        </div>
-
-        {/* Error */}
-        {error && (
-          <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-            {error}
+        <div className="b-mid">
+          <span className="b-eyebrow"><span className="ar">اقرأ</span>{c.eyebrow}</span>
+          <h1 className="b-title">{c.title}</h1>
+          <p className="b-sub">{c.sub}</p>
+          <div className="b-points">
+            {c.points.map((pt, i) => (
+              <div className="b-point" key={i}>
+                <span className="pc"><Icon name={POINT_ICONS[i]} size={17} /></span>{pt}
+              </div>
+            ))}
           </div>
-        )}
+        </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="email@example.com"
-              required
-              className="w-full bg-[#0a0f1a] border border-white/10 text-white placeholder-white/25 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#10b981]/40 focus:border-[#10b981]/50 transition-all"
-            />
-          </div>
+        <div className="b-foot">© {new Date().getFullYear()} Arabic Education Center</div>
+      </aside>
 
-          <div>
-            <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Parol</label>
-            <div className="relative">
-              <input
-                type={showPass ? 'text' : 'password'}
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                className="w-full bg-[#0a0f1a] border border-white/10 text-white placeholder-white/25 rounded-xl px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-[#10b981]/40 focus:border-[#10b981]/50 transition-all"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPass(v => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/70 transition-colors p-1"
-              >
-                {showPass
-                  ? <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
-                  : <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                }
-              </button>
+      {/* RIGHT — login card */}
+      <main className="formside">
+        <div className="wrap enter" style={{ transitionDelay: '160ms' }}>
+          <div className="card">
+            <div className="c-head">
+              <div>
+                <div className="c-title">{c.welcome}</div>
+                <div className="c-sub">{c.welcomeSub}</div>
+              </div>
+              <div className="lang">
+                <button type="button" className={lang === 'uz' ? 'on' : ''} onClick={() => setLang('uz')}>UZ</button>
+                <button type="button" className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>EN</button>
+              </div>
             </div>
+
+            <form className="form" onSubmit={submit} noValidate>
+              <div className="field">
+                <label>{c.email}</label>
+                <div className="input-wrap">
+                  <input
+                    className={'input' + (errors.email ? ' err' : '')}
+                    type="email" placeholder={c.emailPh} value={email}
+                    onChange={(e) => { setEmail(e.target.value); if (errors.email) setErrors((p) => ({ ...p, email: null })); }}
+                    autoComplete="email"
+                  />
+                </div>
+                {errors.email && <div className="err-msg"><Icon name="warn" size={14} />{errors.email}</div>}
+              </div>
+
+              <div className="field">
+                <label>{c.pass}</label>
+                <div className="input-wrap">
+                  <input
+                    className={'input has-icon' + (errors.pass ? ' err' : '')}
+                    type={showPass ? 'text' : 'password'} placeholder="••••••••" value={password}
+                    onChange={(e) => { setPassword(e.target.value); if (errors.pass) setErrors((p) => ({ ...p, pass: null })); }}
+                    autoComplete="current-password"
+                  />
+                  <button type="button" className="eye" onClick={() => setShowPass((s) => !s)} aria-label="toggle password">
+                    <Icon name={showPass ? 'eyeoff' : 'eye'} size={19} />
+                  </button>
+                </div>
+                {errors.pass && <div className="err-msg"><Icon name="warn" size={14} />{errors.pass}</div>}
+              </div>
+
+              {error && <div className="err-msg"><Icon name="warn" size={14} />{error}</div>}
+
+              <div className="row-between">
+                <div className="remember" onClick={() => setRemember((r) => !r)}>
+                  <span className={'check' + (remember ? ' on' : '')}>{remember && <Icon name="check" size={13} />}</span>
+                  {c.remember}
+                </div>
+                <a className="link" href="#">{c.forgot}</a>
+              </div>
+
+              <button className="btn-submit" type="submit" disabled={loading}>
+                {loading && <span className="spinner" />}
+                {loading ? c.submitting : c.submit}
+              </button>
+            </form>
+
+            <div className="c-foot"><span className="ic"><Icon name="info" size={14} /></span>{c.foot}</div>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-[#10b981] hover:bg-[#059669] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] transition-all mt-2"
-          >
-            {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                Kirilmoqda...
-              </span>
-            ) : 'Kirish'}
-          </button>
-        </form>
-
-        <p className="text-center text-sm text-white/35 mt-6">
-          Hisobingiz yo'qmi?{' '}
-          <Link href="/register" className="text-[#10b981] font-semibold hover:underline">
-            Ro'yxatdan o'ting
-          </Link>
-        </p>
-      </div>
-
-      <p className="text-center text-xs text-white/25 mt-5">
-        <Link href="/" className="hover:text-white/50 transition-colors">← Bosh sahifaga qaytish</Link>
-      </p>
+          <Link className="back" href="/"><Icon name="arrowleft" size={16} />{c.back}</Link>
+        </div>
+      </main>
     </div>
   );
 }

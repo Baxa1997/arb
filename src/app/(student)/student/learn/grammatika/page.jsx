@@ -22,29 +22,29 @@ export default function GrammatikaPage() {
   return (
     <div className="space-y-8">
       <div>
-        <div className="inline-flex items-center gap-2 bg-[#f59e0b]/10 text-[#f59e0b] px-3 py-1 rounded-full text-xs font-bold border border-[#f59e0b]/20 mb-3">
+        <div className="inline-flex items-center gap-2 bg-brand-500/10 text-brand-600 px-3 py-1 rounded-full text-xs font-bold border border-brand-500/20 mb-3">
           Asosiy Qoidalar
         </div>
-        <h1 className="text-3xl font-extrabold text-white mb-2">Grammatika</h1>
-        <p className="text-white/55 text-sm leading-relaxed max-w-xl">
+        <h1 className="text-3xl font-extrabold text-brand-700 mb-2">Grammatika</h1>
+        <p className="text-brand-700/55 text-sm leading-relaxed max-w-xl">
           Yozish, o'qish hamda ulanishdagi eng asosiy, o'rganilishi shart bo'lgan tamoyillar yig'indisi.
         </p>
       </div>
 
       <div className="space-y-5">
         {rules.map((rule, idx) => (
-          <div key={idx} className="bg-[#141d2e] border border-white/6 rounded-2xl p-5 md:p-6 flex flex-col md:flex-row gap-5 items-start">
-            <div className="w-14 h-14 rounded-xl bg-[#111827] flex items-center justify-center text-2xl border border-white/5 flex-shrink-0" style={{ boxShadow: `0 0 20px ${rule.color}20` }}>
+          <div key={idx} className="bg-cream-50 border border-brand-700/10 rounded-2xl p-5 md:p-6 flex flex-col md:flex-row gap-5 items-start">
+            <div className="w-14 h-14 rounded-xl bg-cream-100 flex items-center justify-center text-2xl border border-brand-700/10 flex-shrink-0">
               {rule.icon}
             </div>
             <div className="flex-1 w-full">
-              <h2 className="text-xl font-bold text-white mb-2">{rule.title}</h2>
-              <p className="text-white/65 leading-relaxed text-sm mb-4">{rule.desc}</p>
+              <h2 className="text-xl font-bold text-brand-700 mb-2">{rule.title}</h2>
+              <p className="text-brand-700/65 leading-relaxed text-sm mb-4">{rule.desc}</p>
               <div className="space-y-2">
                 {rule.examples.map((ex, i) => (
-                  <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-3 bg-[#111827] p-3 rounded-xl border border-white/5">
-                    <span className="font-arabic text-3xl drop-shadow-sm" style={{ color: rule.color }} dir="rtl">{ex.ar}</span>
-                    <span className="text-sm text-white/50">{ex.txt}</span>
+                  <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-3 bg-cream-100 p-3 rounded-xl border border-brand-700/10">
+                    <span className="font-arabic text-3xl text-brand-600" dir="rtl">{ex.ar}</span>
+                    <span className="text-sm text-brand-700/50">{ex.txt}</span>
                   </div>
                 ))}
               </div>

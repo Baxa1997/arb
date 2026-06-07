@@ -5,7 +5,7 @@ export default function QuizBlock({ letter }) {
   const [selected, setSelected] = useState(null);
 
   if (!letter.quiz || letter.quiz.length === 0) {
-    return <div className="text-white/50 text-center p-8 bg-[#141d2e] rounded-3xl">Bu harf uchun hozircha test mavjud emas.</div>;
+    return <div className="text-brand-700/50 text-center p-8 bg-cream-50 border border-brand-700/10 rounded-3xl">Bu harf uchun hozircha test mavjud emas.</div>;
   }
 
   const quiz = letter.quiz[currentQ];
@@ -20,34 +20,29 @@ export default function QuizBlock({ letter }) {
   };
 
   return (
-    <div className="bg-[#141d2e] border border-white/5 rounded-3xl p-6 md:p-8">
+    <div className="bg-cream-50 border border-brand-700/10 rounded-3xl p-6 md:p-8 shadow-sm">
       <div className="flex justify-between items-center mb-6">
-        <span className="text-white/50 text-sm font-medium">Test {currentQ + 1} / {letter.quiz.length}</span>
-        <span className="text-[#f59e0b] font-bold text-sm bg-yellow-500/10 px-3 py-1 rounded-full">{letter.name}</span>
+        <span className="text-brand-700/50 text-sm font-medium">Test {currentQ + 1} / {letter.quiz.length}</span>
+        <span className="text-brand-600 font-bold text-sm bg-brand-500/10 px-3 py-1 rounded-full">{letter.name}</span>
       </div>
 
       <div className="flex flex-col items-center mb-8">
-        <div className="font-arabic text-8xl md:text-9xl text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.4)] mb-6">
+        <div className="font-arabic text-8xl md:text-9xl text-brand-700 mb-6">
           {letter.ar}
         </div>
-        <h3 className="text-xl md:text-2xl text-center text-white/90 font-medium">{quiz.question}</h3>
+        <h3 className="text-xl md:text-2xl text-center text-brand-700 font-medium">{quiz.question}</h3>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         {quiz.options.map((opt, idx) => {
-          let btnClass = "bg-[#111827] border border-white/10 hover:bg-white/5 text-white/80";
+          let btnClass = "bg-cream-100 border border-brand-700/10 hover:bg-brand-500/5 text-brand-700/80";
           if (isAnswered) {
              if (idx === quiz.correct) {
-               btnClass = "bg-[#10b981]/20 border-[#10b981] text-accent font-bold shadow-[0_0_15px_rgba(16,185,129,0.2)]";
+               btnClass = "bg-brand-500/15 border-brand-500 text-brand-600 font-bold shadow-[0_0_15px_rgba(46,125,79,0.15)]";
              } else if (idx === selected) {
-               btnClass = "bg-red-500/20 border-red-500 text-red-400 font-bold";
+               btnClass = "bg-red-500/15 border-red-400 text-red-600 font-bold";
              } else {
-               btnClass = "bg-[#111827] border-white/5 text-white/30 opacity-50";
-             }
-          } else {
-             if (selected === idx) {
-                // Should not happen since we evaluate immediately, but just in case
-                btnClass = "border-[#6366f1] bg-[#6366f1]/20";
+               btnClass = "bg-cream-100 border-brand-700/5 text-brand-700/30 opacity-60";
              }
           }
 
@@ -56,7 +51,7 @@ export default function QuizBlock({ letter }) {
               key={idx}
               disabled={isAnswered}
               onClick={() => setSelected(idx)}
-              className={`p-4 rounded-2xl transition-all duration-300 text-lg ${btnClass}`}
+              className={`p-4 rounded-2xl border transition-all duration-300 text-lg ${btnClass}`}
             >
               {opt}
             </button>
@@ -65,14 +60,14 @@ export default function QuizBlock({ letter }) {
       </div>
 
       {isAnswered && (
-         <div className="flex justify-between items-center bg-[#111827] p-4 rounded-2xl border border-white/5 animate-fade-in-up">
-            <span className={`font-bold ${isCorrect ? 'text-[#10b981]' : 'text-red-400'}`}>
+         <div className="flex justify-between items-center bg-cream-100 p-4 rounded-2xl border border-brand-700/10 animate-fade-in-up">
+            <span className={`font-bold ${isCorrect ? 'text-brand-600' : 'text-red-600'}`}>
               {isCorrect ? 'Tahsin! To\'g\'ri javob.' : 'Xato qildingiz, qayta urinib ko\'ring.'}
             </span>
             {currentQ < letter.quiz.length - 1 && (
-              <button 
+              <button
                 onClick={handleNext}
-                className="bg-[#10b981] hover:bg-[#0ea5e9] text-white font-bold py-2 px-6 rounded-xl transition-colors shadow-[0_0_10px_rgba(16,185,129,0.4)]"
+                className="bg-brand-500 hover:bg-brand-600 text-white font-bold py-2 px-6 rounded-xl transition-colors shadow-[0_0_10px_rgba(46,125,79,0.3)]"
               >
                 Keyingi savol →
               </button>

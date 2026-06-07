@@ -1,117 +1,169 @@
 'use client';
 import Link from 'next/link';
-import { useLearned } from '@/hooks/useLearned';
+import { useEffect, useState } from 'react';
+import { useAuthStore } from '@/store/authStore';
+import { useProgress } from '@/hooks/useProgress';
+import { homeworkQueries } from '@/lib/queries';
 import { letters } from '@/data/letters';
+import { useT } from '@/i18n';
+import Icon from '@/components/dash/Icon';
+
+const TOTAL = 28;
 
 const MODULES = [
-  { href: '/student/learn/alifbo', icon: 'ا', label: 'Alifbo', desc: '28 ta arab harfi', color: '#10b981', arabic: true },
-  { href: '/student/learn/harakatlar', icon: 'َ', label: 'Harakatlar', desc: 'Qisqa unlilar belgilari', color: '#f59e0b', arabic: true },
-  { href: '/student/learn/maxrajlar', icon: '🫁', label: 'Maxrajlar', desc: 'Talaffuz manbalari', color: '#6366f1' },
-  { href: '/student/learn/sifatlar', icon: '🎙️', label: 'Sifatlar', desc: 'Harf xususiyatlari', color: '#3b82f6' },
-  { href: '/student/learn/grammatika', icon: '📖', label: 'Grammatika', desc: 'Asosiy qoidalar', color: '#ec4899' },
-];
-
-const MOCK_HW = [
-  { title: 'Alifbo takroriy yozuv', due: '2026-05-14', status: 'pending' },
-  { title: 'Harakatlar mashqi', due: '2026-05-12', status: 'submitted' },
+  { href: '/student/learn/alifbo', ar: 'ا', labelKey: 'nav_alphabet', descKey: 'mod_alifbo_desc' },
+  { href: '/student/learn/harakatlar', ar: 'َ', labelKey: 'nav_harakat', descKey: 'mod_harakat_desc' },
+  { href: '/student/learn/maxrajlar', icon: 'sound', labelKey: 'nav_makhraj', descKey: 'mod_makhraj_desc' },
+  { href: '/student/learn/sifatlar', icon: 'star', labelKey: 'nav_sifat', descKey: 'mod_sifat_desc' },
 ];
 
 export default function StudentDashboard() {
-  const { learned } = useLearned();
-  const pct = Math.round((learned.length / 28) * 100);
-  const streak = 5;
+  const t = useT();
+  const { profile } = useAuthStore();
+  const { map, statusOf, doneCount, currentLetterId, loading } = useProgress();
+  const [homework, setHomework] = useState([]);
+
+  useEffect(() => {
+    if (!profile?.id) return;
+    homeworkQueries.getStudentHomework(profile.id).then(setHomework).catch(() => {});
+  }, [profile?.id]);
+
+  const pct = Math.round((doneCount / TOTAL) * 100);
+  const currentLetter = letters.find((l) => l.id === currentLetterId);
+  const pendingHw = homework.filter((h) => {
+    const s = (h.homework_submissions ?? [])[0];
+    return !s || s.status === 'in_progress';
+  });
+
+  if (loading) return <div className="dash-spin" />;
 
   return (
-    <div className="space-y-8">
-      {/* Welcome banner */}
-      <div className="relative bg-gradient-to-br from-[#6366f1]/20 to-[#141d2e] border border-[#6366f1]/20 rounded-2xl p-6 md:p-8 overflow-hidden">
-        <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-[#6366f1]/10 blur-3xl pointer-events-none" />
-        <div className="relative z-10">
-          <p className="text-[#6366f1] font-bold text-sm mb-1">Xush kelibsiz! 👋</p>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-white mb-2">Bugun o'rganishda davom eting</h1>
-          <p className="text-white/55 text-sm mb-4">Siz {learned.length} ta harfni o'rgandingiz. Maqsad: 28 ta harf!</p>
-          <Link href="/student/learn/alifbo"
-            className="inline-flex items-center gap-2 bg-[#6366f1] hover:bg-[#5558e8] text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all">
-            ▶ Davom etish
-          </Link>
+    <div className="view">
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">{t('welcome_name')}, {profile?.full_name ?? t('role_student')} 👋</h1>
+          <p className="page-sub">{currentLetter ? `${t('keep_going')} — ${doneCount} ${t('letters_done_of')}` : t('all_done_sub')}</p>
         </div>
       </div>
 
-      {/* Stats row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {[
-          { label: "O'rganildi", value: learned.length, icon: '✅', color: '#10b981' },
-          { label: 'Qoldi', value: 28 - learned.length, icon: '🎯', color: '#f59e0b' },
-          { label: 'Streak', value: `${streak} kun`, icon: '🔥', color: '#ef4444' },
-          { label: 'Ball', value: `${pct}%`, icon: '⭐', color: '#6366f1' },
-        ].map(s => (
-          <div key={s.label} className="bg-[#141d2e] border border-white/6 rounded-2xl p-4">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg mb-3" style={{ background: `${s.color}15`, border: `1px solid ${s.color}25` }}>
-              {s.icon}
+      {/* current lesson banner */}
+      {currentLetter ? (
+        <div className="card" style={{ background: 'linear-gradient(120deg, var(--brand-50), var(--paper) 70%)', marginBottom: 22 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 18, padding: '20px 22px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 18, minWidth: 0 }}>
+              <div className="tile ar" style={{ width: 64, height: 64, borderRadius: 16, fontSize: 38 }}>{currentLetter.ar}</div>
+              <div style={{ minWidth: 0 }}>
+                <div className="cap" style={{ fontSize: 11, color: 'var(--brand)' }}>{t('current_lesson')}</div>
+                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 24, letterSpacing: '-0.02em', marginTop: 2 }}>{currentLetter.name}</div>
+              </div>
             </div>
-            <div className="text-2xl font-extrabold text-white">{s.value}</div>
-            <div className="text-xs text-white/45 mt-0.5">{s.label}</div>
+            <Link href={`/student/lessons/${currentLetter.id}`} className="btn btn-primary"><Icon name="book" size={16} />{t('open_lesson')}</Link>
           </div>
-        ))}
+        </div>
+      ) : (
+        <div className="card" style={{ marginBottom: 22 }}>
+          <div className="empty"><div className="ei"><Icon name="checkCircle" size={26} /></div><h4>{t('all_done_title')}</h4><p>{t('all_done_sub')}</p></div>
+        </div>
+      )}
+
+      {/* KPI strip */}
+      <div className="kpis" style={{ gridTemplateColumns: 'repeat(4,1fr)' }}>
+        <Kpi icon="checkCircle" tone="brand" num={doneCount} label={t('stat_done')} />
+        <Kpi icon="target" tone="amber" num={TOTAL - doneCount} label={t('stat_left')} />
+        <Kpi icon="fileCheck" tone="blue" num={pendingHw.length} label={t('nav_homework')} />
+        <Kpi icon="star" tone="brand" num={pct} suffix="%" label={t('stat_progress')} />
       </div>
 
-      {/* Progress bar */}
-      <div className="bg-[#141d2e] border border-white/6 rounded-2xl p-5">
-        <div className="flex justify-between items-center mb-3">
-          <span className="font-bold text-white">Alifbo jarayoni</span>
-          <span className="text-[#10b981] font-extrabold text-lg">{pct}%</span>
+      <div className="grid-2">
+        {/* alphabet mastery (own progress) */}
+        <div className="card">
+          <div className="card-head">
+            <div className="card-title"><span className="ct-ico"><Icon name="chart" size={18} /></span>{t('alphabet_progress')}</div>
+            <Link className="link-all" href="/student/learn/alifbo">{t('all')}<Icon name="arrowR" size={14} /></Link>
+          </div>
+          <div className="mastery-body">
+            <div className="mastery-bar-row">
+              <div className="mastery-pct">{pct}%</div>
+              <div className="mbar"><i style={{ width: pct + '%' }} /></div>
+              <div className="mastery-meta">{doneCount} / {TOTAL} {t('mastery_meta_uz')}</div>
+            </div>
+            <div className="alpha-grid">
+              {letters.map((l) => {
+                const st = statusOf(l.id);
+                const cls = st === 'done' ? 'done' : st === 'current' ? 'current' : 'locked';
+                return <div className={'alpha-cell ' + cls} key={l.id} title={l.name}>{l.ar}</div>;
+              })}
+            </div>
+            <div className="alpha-legend">
+              <span><i className="lg-dot" style={{ background: 'var(--brand)' }} />{t('lg_done')}</span>
+              <span><i className="lg-dot" style={{ background: 'var(--amber)' }} />{t('lg_current')}</span>
+              <span><i className="lg-dot" style={{ background: 'var(--cream-3)' }} />{t('lg_locked')}</span>
+            </div>
+          </div>
         </div>
-        <div className="h-3 bg-white/6 rounded-full overflow-hidden mb-3">
-          <div className="h-full bg-gradient-to-r from-[#10b981] to-[#34d399] rounded-full transition-all duration-1000" style={{ width: `${pct}%` }} />
+
+        {/* homework */}
+        <div className="card">
+          <div className="card-head">
+            <div className="card-title"><span className="ct-ico"><Icon name="fileCheck" size={18} /></span>{t('nav_homework')}</div>
+            <Link className="link-all" href="/student/homework">{t('all')}<Icon name="arrowR" size={14} /></Link>
+          </div>
+          {homework.length === 0 ? (
+            <div className="empty"><div className="ei"><Icon name="fileCheck" size={26} /></div><p>{t('no_homework_short')}</p></div>
+          ) : (
+            <div className="rows">
+              {homework.slice(0, 5).map((hw) => {
+                const s = (hw.homework_submissions ?? [])[0];
+                const done = s && s.status !== 'in_progress';
+                const letter = letters.find((l) => l.id === hw.letter_id);
+                return (
+                  <Link className="lrow" key={hw.id} href={`/student/homework/${hw.id}`} style={{ cursor: 'pointer', color: 'inherit', textDecoration: 'none' }}>
+                    {letter && <div className="tile ar">{letter.ar}</div>}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="lrow-title">{hw.title}</div>
+                      <div className="lrow-meta">{hw.due_date ? `${t('due_label')}: ${hw.due_date}` : t('no_due')}</div>
+                    </div>
+                    <span className={'badge ' + (done ? 'ok' : 'warn')}>{done ? t('st_submitted') : t('badge_pending')}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </div>
-        <div className="flex gap-1">
-          {letters.map(l => (
-            <div key={l.id} className={`flex-1 h-1.5 rounded-full transition-colors ${learned.includes(l.id) ? 'bg-[#10b981]' : 'bg-white/8'}`} />
+      </div>
+
+      {/* learn modules */}
+      <div className="card mt">
+        <div className="card-head"><div className="card-title"><span className="ct-ico"><Icon name="book" size={18} /></span>{t('learn_modules')}</div></div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12, padding: 16 }}>
+          {MODULES.map((m) => (
+            <Link key={m.href} href={m.href} className="lrow" style={{ borderRadius: 'var(--r-md)', border: '1px solid var(--line)', textDecoration: 'none', color: 'inherit' }}>
+              {m.ar ? <div className="tile ar">{m.ar}</div> : <div className="tile" style={{ background: 'var(--brand-50)', border: '1px solid var(--brand-line)', color: 'var(--brand)' }}><Icon name={m.icon} size={20} /></div>}
+              <div style={{ minWidth: 0 }}>
+                <div className="lrow-title">{t(m.labelKey)}</div>
+                <div className="lrow-meta">{t(m.descKey)}</div>
+              </div>
+            </Link>
           ))}
         </div>
       </div>
+    </div>
+  );
+}
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Learning modules */}
-        <div className="lg:col-span-2 space-y-4">
-          <h2 className="text-lg font-bold text-white">O'quv modullari</h2>
-          <div className="grid sm:grid-cols-2 gap-3">
-            {MODULES.map(m => (
-              <Link key={m.href} href={m.href}
-                className="flex items-center gap-4 bg-[#141d2e] border border-white/6 rounded-2xl p-4 hover:border-white/12 hover:-translate-y-0.5 transition-all group">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0" style={{ background: `${m.color}15`, border: `1px solid ${m.color}25` }}>
-                  <span className={m.arabic ? 'font-arabic' : ''}>{m.icon}</span>
-                </div>
-                <div>
-                  <div className="font-bold text-white group-hover:text-white/90">{m.label}</div>
-                  <div className="text-xs text-white/45">{m.desc}</div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* Homework */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-white">Uy ishi</h2>
-            <Link href="/student/homework" className="text-sm text-[#6366f1] hover:underline font-medium">Barchasi →</Link>
-          </div>
-          <div className="space-y-3">
-            {MOCK_HW.map((hw, i) => (
-              <div key={i} className="bg-[#141d2e] border border-white/6 rounded-2xl p-4">
-                <div className="font-semibold text-white text-sm mb-1">{hw.title}</div>
-                <div className="flex items-center justify-between">
-                  <div className="text-xs text-white/40">Muddat: {hw.due}</div>
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${hw.status === 'submitted' ? 'bg-[#10b981]/15 text-[#10b981] border-[#10b981]/25' : 'bg-[#f59e0b]/15 text-[#f59e0b] border-[#f59e0b]/25'}`}>
-                    {hw.status === 'submitted' ? 'Topshirildi' : 'Kutilmoqda'}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+function Kpi({ icon, tone, num, suffix, label }) {
+  const tones = {
+    brand: { bg: 'var(--brand-50)', fg: 'var(--brand)' },
+    amber: { bg: 'var(--amber-soft)', fg: 'var(--amber)' },
+    blue: { bg: 'var(--blue-soft)', fg: 'var(--blue)' },
+  }[tone] || {};
+  return (
+    <div className="kpi">
+      <div className="kpi-top">
+        <div className="kpi-ico" style={{ background: tones.bg, color: tones.fg }}><Icon name={icon} size={18} /></div>
       </div>
+      <div className="kpi-num">{num}{suffix && <small>{suffix}</small>}</div>
+      <div className="kpi-label">{label}</div>
     </div>
   );
 }

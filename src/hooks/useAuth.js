@@ -16,7 +16,10 @@ export function useAuth() {
   const signIn = async (email, password) => {
     const prof = await login(email, password);
     if (prof) {
-      router.push(prof.role === 'teacher' ? '/dashboard' : '/student/dashboard');
+      const dest = prof.role === 'super_admin' ? '/admin'
+                 : prof.role === 'teacher'     ? '/dashboard'
+                 :                               '/student/dashboard';
+      router.push(dest);
     }
   };
 

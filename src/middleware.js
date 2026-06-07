@@ -1,35 +1,25 @@
 import { NextResponse } from 'next/server';
 
-const TEACHER_PATHS = ['/dashboard'];
-const STUDENT_PATHS = ['/student'];
+const PROTECTED = ['/admin', '/dashboard', '/student', '/teach'];
 
 export function middleware(req) {
   const { pathname } = req.nextUrl;
 
-  // We rely on a cookie set after demo login OR Supabase session cookie
-  // For Supabase: the auth helpers set sb-access-token
-  // For demo: we set arb_demo_role cookie on login
-  const demoRole   = req.cookies.get('arb_demo_role')?.value;
-  const supaToken  = req.cookies.get('sb-access-token')?.value;
-  const isAuthed   = !!demoRole || !!supaToken;
+  // Auth-gate only. Role enforcement happens in each route-group layout.
+  // The app sets `aec_session` on login (both demo and Supabase modes), since
+  // the Supabase JS client keeps its real session in localStorage, not cookies.
+  const hasSession = !!req.cookies.get('aec_session')?.value
+    || !!req.cookies.get('arb_demo_role')?.value;
 
-  // Protect teacher routes
-  if (TEACHER_PATHS.some(p => pathname.startsWith(p))) {
-    if (!isAuthed) {
-      return NextResponse.redirect(new URL('/login', req.url));
-    }
-  }
-
-  // Protect student routes
-  if (STUDENT_PATHS.some(p => pathname.startsWith(p))) {
-    if (!isAuthed) {
-      return NextResponse.redirect(new URL('/login', req.url));
-    }
+  if (PROTECTED.some(p => pathname.startsWith(p)) && !hasSession) {
+    const url = new URL('/login', req.url);
+    url.searchParams.set('next', pathname);
+    return NextResponse.redirect(url);
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/student/:path*'],
+  matcher: ['/admin/:path*', '/dashboard/:path*', '/student/:path*', '/teach/:path*'],
 };

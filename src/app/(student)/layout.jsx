@@ -1,30 +1,52 @@
 'use client';
 import { useState } from 'react';
+import Link from 'next/link';
 import StudentSidebar from '@/components/layout/StudentSidebar';
+import RoleGuard from '@/components/RoleGuard';
+import Icon from '@/components/dash/Icon';
+import { useProgress } from '@/hooks/useProgress';
+import { useT, useLang } from '@/i18n';
 
 export default function StudentLayout({ children }) {
+  const t = useT();
+  const lang = useLang((s) => s.lang);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { currentLetterId } = useProgress();
+
+  const dateStr = new Date().toLocaleDateString(lang === 'uz' ? 'uz-UZ' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' });
 
   return (
-    <div className="dashboard-layout">
-      <StudentSidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
+    <RoleGuard role="student">
+      <div className="aec-dash">
+        <div className="app">
+          {mobileOpen && <div className="sb-overlay" onClick={() => setMobileOpen(false)} />}
+          <StudentSidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
 
-      <div className="dashboard-main flex flex-col min-h-screen">
-        {/* Mobile top bar */}
-        <header className="md:hidden sticky top-0 z-10 bg-[#0d1424]/95 backdrop-blur-xl border-b border-white/6 px-4 h-14 flex items-center justify-between">
-          <button onClick={() => setMobileOpen(true)} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
-            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-          <span className="font-arabic text-xl text-[#6366f1]">اقرأ</span>
-          <div className="w-9" />
-        </header>
+          <main className="main">
+            <div className="mobile-bar">
+              <button className="ham" onClick={() => setMobileOpen(true)} aria-label="menu"><Icon name="filter" size={18} /></button>
+              <span className="ar" style={{ fontSize: 20, color: 'var(--brand)' }}>اقرأ</span>
+            </div>
 
-        <main className="flex-1 p-4 md:p-8">
-          {children}
-        </main>
+            <div className="toolbar">
+              <div className="tb-spacer" />
+              <div className="tb-date"><Icon name="calendar" size={15} />{dateStr}</div>
+              {currentLetterId && (
+                <>
+                  <div className="tb-div" />
+                  <Link className="btn btn-primary" href={`/student/lessons/${currentLetterId}`}>
+                    <Icon name="book" size={16} />{t('resume_lesson')}
+                  </Link>
+                </>
+              )}
+            </div>
+
+            <div className="content">
+              <div className="content-inner">{children}</div>
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+    </RoleGuard>
   );
 }

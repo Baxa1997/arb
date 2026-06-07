@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"next dev\" \"json-server --watch db.json --port 3001 -q\"",
+    "dev": "next dev",
     "dev:frontend": "next dev",
     "dev:api": "json-server --watch db.json --port 3001",
     "build": "next build",

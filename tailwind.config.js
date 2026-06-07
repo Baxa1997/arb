@@ -14,8 +14,8 @@ module.exports = {
     },
     extend: {
       fontFamily: {
-        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
-        arabic: ['var(--font-amiri)', 'serif'],
+        sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
+        arabic: ['var(--font-arabic)', 'serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -23,11 +23,37 @@ module.exports = {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        // Creamy background scale
+        cream: {
+          50:  "#FFFDF8",
+          100: "#FBF8F1",
+          200: "#F4ECD9",
+          300: "#EADFC4",
+          400: "#E0D2AE",
+          500: "#D4C193",
+          600: "#C2A96E",
+          700: "#A88B4d",
+          800: "#7d6535",
+          900: "#574623",
+        },
+        // Brand green scale
+        brand: {
+          50:  "#EAF4EE",
+          100: "#D2E8DA",
+          200: "#A6D2B7",
+          300: "#79BB93",
+          400: "#4F9F6E",
+          500: "#2E7D4F",
+          600: "#1F6B40",
+          700: "#1F3D2B",
+          800: "#163322",
+          900: "#0F2418",
+        },
         islamic: {
-          green: "#1a4a2e",
+          green: "#2E7D4F",
           navy: "#1a2a4a",
           gold: "#c9a84c",
-          red: "#cc0000",
+          red: "#c0392b",
           blue: "#0055aa"
         },
         primary: {
