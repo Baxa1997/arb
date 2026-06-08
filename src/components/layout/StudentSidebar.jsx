@@ -54,6 +54,7 @@ export default function StudentSidebar({ mobileOpen, onClose }) {
           <div className="sb-logo-name">Arabic Education</div>
           <div className="sb-logo-sub">{t('role_student')}</div>
         </div>
+        <button className="sb-close" onClick={onClose} aria-label="close"><Icon name="x" size={18} /></button>
       </div>
 
       <div className="sb-progress">

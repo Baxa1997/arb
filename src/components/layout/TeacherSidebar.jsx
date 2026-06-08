@@ -69,6 +69,7 @@ export default function TeacherSidebar({ mobileOpen, onClose }) {
           <div className="sb-logo-name">Arabic Education</div>
           <div className="sb-logo-sub">{t('dash_brand_sub')}</div>
         </div>
+        <button className="sb-close" onClick={onClose} aria-label="close"><Icon name="x" size={18} /></button>
       </div>
 
       <div className="sb-group">{t('dash_grp_main')}</div>

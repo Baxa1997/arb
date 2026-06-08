@@ -8,6 +8,8 @@ export default function Icon({ name, size = 20, sw = 1.8 }) {
     book: <><path d="M4 5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v15l-5-2.5L8 20" /><path d="M4 5v13a2 2 0 0 0 2 2h2" /></>,
     pencil: <><path d="M4 20h4l10-10a2.1 2.1 0 0 0-3-3L5 17v3Z" /><path d="M13.5 6.5l3 3" /></>,
     plus: <path d="M12 5v14M5 12h14" />,
+    menu: <path d="M3 6h18M3 12h18M3 18h18" />,
+    x: <path d="M6 6l12 12M18 6L6 18" />,
     chevL: <path d="M15 6l-6 6 6 6" />,
     chevR: <path d="M9 6l6 6-6 6" />,
     chevD: <path d="M6 9l6 6 6-6" />,

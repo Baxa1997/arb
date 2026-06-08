@@ -24,8 +24,10 @@ export default function StudentLayout({ children }) {
 
           <main className="main">
             <div className="mobile-bar">
-              <button className="ham" onClick={() => setMobileOpen(true)} aria-label="menu"><Icon name="filter" size={18} /></button>
-              <span className="ar" style={{ fontSize: 20, color: 'var(--brand)' }}>اقرأ</span>
+              <button className="ham" onClick={() => setMobileOpen(true)} aria-label={t('menu')}>
+                <Icon name="menu" size={20} /><span>{t('menu')}</span>
+              </button>
+              <span className="ar" style={{ fontSize: 20, color: 'var(--brand)', marginLeft: 'auto' }}>اقرأ</span>
             </div>
 
             <div className="toolbar">

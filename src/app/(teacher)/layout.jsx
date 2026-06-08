@@ -41,10 +41,10 @@ export default function TeacherLayout({ children }) {
           <main className="main">
             {/* mobile bar (hamburger) */}
             <div className="mobile-bar">
-              <button className="ham" onClick={() => setMobileOpen(true)} aria-label="menu">
-                <Icon name="filter" size={18} />
+              <button className="ham" onClick={() => setMobileOpen(true)} aria-label={t('menu')}>
+                <Icon name="menu" size={20} /><span>{t('menu')}</span>
               </button>
-              <span className="ar" style={{ fontSize: 20, color: 'var(--brand)' }}>اقرأ</span>
+              <span className="ar" style={{ fontSize: 20, color: 'var(--brand)', marginLeft: 'auto' }}>اقرأ</span>
             </div>
 
             {/* toolbar */}
