@@ -125,6 +125,10 @@ export default function LoginPage() {
       {/* RIGHT — login card */}
       <main className="formside">
         <div className="wrap enter" style={{ transitionDelay: '160ms' }}>
+          <div className="login-mobile-brand">
+            <div className="lmb-mark ar">اقرأ</div>
+            <div className="lmb-name">Arabic Education Center</div>
+          </div>
           <div className="card">
             <div className="c-head">
               <div>
@@ -145,7 +149,7 @@ export default function LoginPage() {
                     className={'input' + (errors.email ? ' err' : '')}
                     type="email" placeholder={c.emailPh} value={email}
                     onChange={(e) => { setEmail(e.target.value); if (errors.email) setErrors((p) => ({ ...p, email: null })); }}
-                    autoComplete="email"
+                    autoComplete="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false}
                   />
                 </div>
                 {errors.email && <div className="err-msg"><Icon name="warn" size={14} />{errors.email}</div>}

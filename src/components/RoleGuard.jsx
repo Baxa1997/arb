@@ -6,7 +6,7 @@ import { Spinner } from '@/components/ui/Spinner';
 
 const HOME = {
   super_admin: '/admin',
-  teacher: '/dashboard',
+  teacher: '/dashboard/students',
   student: '/student/dashboard',
 };
 

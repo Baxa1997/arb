@@ -5,6 +5,7 @@ import { profileQueries, homeworkQueries } from '@/lib/queries';
 import { letters } from '@/data/letters';
 import { useT, useLang } from '@/i18n';
 import Icon from '@/components/dash/Icon';
+import { useDashSearch } from '@/store/dashSearch';
 
 const TYPES = [
   { id: 'text', key: 'hw_type_text' },
@@ -32,7 +33,7 @@ export default function TeacherHomeworkPage() {
   const [error, setError] = useState(null);
   const [reviewing, setReviewing] = useState(null);
   const [tab, setTab] = useState('pending');
-  const [q, setQ] = useState('');
+  const q = useDashSearch((s) => s.q);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('new') === '1') {
@@ -91,7 +92,7 @@ export default function TeacherHomeworkPage() {
           <h1 className="page-title">{t('hw_title')}</h1>
           <p className="page-sub">{t('hw_teacher_sub')}</p>
         </div>
-        <button className="btn-soft" onClick={() => setShowForm((v) => !v)}>
+        <button className="btn btn-primary" onClick={() => setShowForm((v) => !v)}>
           <Icon name="plus" size={15} />{showForm ? t('act_cancel') : t('hw_new')}
         </button>
       </div>
@@ -145,11 +146,6 @@ export default function TeacherHomeworkPage() {
           <button className={tab === 'pending' ? 'on' : ''} onClick={() => setTab('pending')}>{t('q_pending')}<span className="sc">{pending.length}</span></button>
           <button className={tab === 'graded' ? 'on' : ''} onClick={() => setTab('graded')}>{t('q_graded')}<span className="sc">{graded.length}</span></button>
           <button className={tab === 'all' ? 'on' : ''} onClick={() => setTab('all')}>{t('q_all')}<span className="sc">{homework.length}</span></button>
-        </div>
-        <div style={{ flex: 1 }} />
-        <div className="tbl-search" style={{ maxWidth: 300 }}>
-          <Icon name="search" size={16} />
-          <input placeholder={t('search_tasks_ph')} value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
       </div>
 

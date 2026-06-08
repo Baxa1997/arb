@@ -6,6 +6,7 @@ import { profileQueries, progressQueries, homeworkQueries } from '@/lib/queries'
 import { letters } from '@/data/letters';
 import { useT, useLang } from '@/i18n';
 import Icon from '@/components/dash/Icon';
+import { useDashSearch } from '@/store/dashSearch';
 
 const TOTAL = 28;
 function letterName(id) { return letters.find((l) => l.id === id)?.name ?? '—'; }
@@ -36,7 +37,7 @@ export default function StudentsPage() {
   const [error, setError] = useState(null);
   const [marking, setMarking] = useState(null);
   const [filter, setFilter] = useState('all');
-  const [q, setQ] = useState('');
+  const q = useDashSearch((s) => s.q);
 
   // Open the create form when arrived via the toolbar "New student" action.
   useEffect(() => {
@@ -114,7 +115,7 @@ export default function StudentsPage() {
           <h1 className="page-title">{t('students_title')}</h1>
           <p className="page-sub">{t('students_sub')}</p>
         </div>
-        <button className="btn-soft" onClick={() => setShowForm((v) => !v)}>
+        <button className="btn btn-primary" onClick={() => setShowForm((v) => !v)}>
           <Icon name="plus" size={15} />{showForm ? t('act_cancel') : t('add_student')}
         </button>
       </div>
@@ -151,10 +152,6 @@ export default function StudentsPage() {
       </div>
 
       <div className="tbl-toolbar">
-        <div className="tbl-search">
-          <Icon name="search" size={16} />
-          <input placeholder={t('search_students_ph')} value={q} onChange={(e) => setQ(e.target.value)} />
-        </div>
         <div className="seg">
           {[['all', t('filter_all')], ['active', t('filter_active')], ['inactive', t('filter_inactive')]].map(([k, lbl]) => (
             <button key={k} className={filter === k ? 'on' : ''} onClick={() => setFilter(k)}>{lbl}</button>

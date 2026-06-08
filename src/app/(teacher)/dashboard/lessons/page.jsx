@@ -5,6 +5,7 @@ import { letters } from '@/data/letters';
 import { letterContentQueries } from '@/lib/queries';
 import { useT } from '@/i18n';
 import Icon from '@/components/dash/Icon';
+import { useDashSearch } from '@/store/dashSearch';
 
 // The teacher's Lessons page is a teaching library: every letter is always
 // accessible. Student progress (done/current/locked) is NOT applied here —
@@ -13,7 +14,7 @@ export default function TeacherLessonsPage() {
   const t = useT();
   const [content, setContent] = useState({});
   const [loading, setLoading] = useState(true);
-  const [q, setQ] = useState('');
+  const q = useDashSearch((s) => s.q);
 
   useEffect(() => {
     letterContentQueries.getAll().then((c) => setContent(c || {})).catch(() => {}).finally(() => setLoading(false));
@@ -45,11 +46,6 @@ export default function TeacherLessonsPage() {
         <div className="summary-chips" style={{ margin: 0 }}>
           <div className="schip"><Icon name="book" size={15} /><b>{letters.length}</b> {t('lessons_all_chip')}</div>
           <div className="schip"><span className="lg-dot" style={{ background: 'var(--brand)' }} /><b>{ready}</b> {t('lessons_ready_chip')}</div>
-        </div>
-        <div style={{ flex: 1 }} />
-        <div className="tbl-search" style={{ maxWidth: 300 }}>
-          <Icon name="search" size={16} />
-          <input placeholder={t('lessons_search_ph')} value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
       </div>
 

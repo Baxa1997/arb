@@ -17,7 +17,7 @@ export function useAuth() {
     const prof = await login(email, password);
     if (prof) {
       const dest = prof.role === 'super_admin' ? '/admin'
-                 : prof.role === 'teacher'     ? '/dashboard'
+                 : prof.role === 'teacher'     ? '/dashboard/students'
                  :                               '/student/dashboard';
       router.push(dest);
     }

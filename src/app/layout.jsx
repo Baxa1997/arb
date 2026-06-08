@@ -43,6 +43,14 @@ export const metadata = {
   keywords: ['arab tili', 'alifbo', 'tajvid', 'makhraj', 'arabic', 'arabic education center'],
 };
 
+// Explicit mobile viewport. No maximumScale so pinch-zoom stays available
+// (accessibility); iOS auto-zoom-on-focus is prevented via 16px inputs in CSS.
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+};
+
 export default function RootLayout({ children }) {
   return (
     <html lang="uz" className={`${jakarta.variable} ${arabic.variable} ${display.variable} ${amiri.variable} ${kufi.variable} ${mono.variable}`}>

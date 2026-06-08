@@ -135,7 +135,7 @@ export default function StudentDashboard() {
       {/* learn modules */}
       <div className="card mt">
         <div className="card-head"><div className="card-title"><span className="ct-ico"><Icon name="book" size={18} /></span>{t('learn_modules')}</div></div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12, padding: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 220px), 1fr))', gap: 12, padding: 16 }}>
           {MODULES.map((m) => (
             <Link key={m.href} href={m.href} className="lrow" style={{ borderRadius: 'var(--r-md)', border: '1px solid var(--line)', textDecoration: 'none', color: 'inherit' }}>
               {m.ar ? <div className="tile ar">{m.ar}</div> : <div className="tile" style={{ background: 'var(--brand-50)', border: '1px solid var(--brand-line)', color: 'var(--brand)' }}><Icon name={m.icon} size={20} /></div>}

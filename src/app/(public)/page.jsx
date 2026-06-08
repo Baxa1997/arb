@@ -10,7 +10,7 @@ const COPY = {
     badge: 'Arabic Education Center',
     h1: ['Arab tilini ', 'professional', ' usulda o‘rganing'],
     sub: 'O‘qituvchi va talaba uchun yagona platforma. Har bir harf alohida dars bo‘lib, ketma-ket ochiladi — uy ishi, takrorlash va rivojlanish, barchasi bir joyda.',
-    ctaPrimary: 'Hisobga kirish',
+    ctaPrimary: 'Kirish',
     ctaGhost: 'Demo ko‘rish',
     sub2: "Ta'lim platformasi",
     stats: [
